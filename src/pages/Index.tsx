@@ -3,7 +3,8 @@ import { CitySearch } from "@/components/CitySearch";
 import { RiskGauge } from "@/components/RiskGauge";
 import { WeatherCard } from "@/components/WeatherCard";
 import { FloodFactors } from "@/components/FloodFactors";
-import { CloudRain, Droplets, Thermometer, Wind } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
+import { CloudRain, Droplets, Thermometer, Wind, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -66,12 +67,23 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            FloodGuard AI
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            ML-Powered Flood Risk Prediction System
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                FloodGuard AI
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                ML-Powered Flood Risk Prediction System
+              </p>
+            </div>
+            <NavLink
+              to="/analytics"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </NavLink>
+          </div>
         </div>
       </header>
 
