@@ -32,7 +32,7 @@ const Analytics = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch("/flood_risk_dataset_india.csv");
+        const response = await fetch("/flood_risk_dataset_india-2.csv");
         const text = await response.text();
         const rows = text.split("\n");
         const headers = rows[0].split(",").map(h => h.trim());
@@ -65,58 +65,45 @@ const Analytics = () => {
   }, []);
 
   // Process data for visualizations
-  const monthlyRainfall = () => {
-    const monthly: { [key: string]: { total: number; count: number } } = {};
+  const rainfallByLandCover = () => {
+    const landCover: { [key: string]: { total: number; count: number } } = {};
     data.forEach(d => {
-      if (d.Month) {
-        if (!monthly[d.Month]) monthly[d.Month] = { total: 0, count: 0 };
-        const rainfall = d["Rainfall (mm)"] || d["Rainfall(mm)"] || d.Rainfall || 0;
+      if (d["Land Cover"]) {
+        if (!landCover[d["Land Cover"]]) landCover[d["Land Cover"]] = { total: 0, count: 0 };
+        const rainfall = d["Rainfall (mm)"];
         if (typeof rainfall === 'number' && !isNaN(rainfall)) {
-          monthly[d.Month].total += rainfall;
-          monthly[d.Month].count += 1;
+          landCover[d["Land Cover"]].total += rainfall;
+          landCover[d["Land Cover"]].count += 1;
         }
       }
     });
     
-    const result = Object.entries(monthly).map(([month, values]) => ({
-      month,
+    return Object.entries(landCover).map(([type, values]) => ({
+      landCover: type,
       avgRainfall: Number((values.total / values.count).toFixed(2)),
     }));
-    
-    console.log("Monthly rainfall data:", result);
-    return result;
   };
 
-  const stateRainfall = () => {
-    const states: { [key: string]: number[] } = {};
+  const rainfallBySoilType = () => {
+    const soilType: { [key: string]: number[] } = {};
     data.forEach(d => {
-      if (d.State) {
-        if (!states[d.State]) states[d.State] = [];
-        const rainfall = d["Rainfall (mm)"] || d["Rainfall(mm)"] || d.Rainfall || 0;
+      if (d["Soil Type"]) {
+        if (!soilType[d["Soil Type"]]) soilType[d["Soil Type"]] = [];
+        const rainfall = d["Rainfall (mm)"];
         if (typeof rainfall === 'number' && !isNaN(rainfall)) {
-          states[d.State].push(rainfall);
+          soilType[d["Soil Type"]].push(rainfall);
         }
       }
     });
     
-    const sortedStates = Object.entries(states)
-      .map(([state, values]) => {
-        const sorted = [...values].sort((a, b) => a - b);
-        return {
-          state,
-          min: Math.min(...values),
-          q1: sorted[Math.floor(sorted.length * 0.25)],
-          median: sorted[Math.floor(sorted.length * 0.5)],
-          q3: sorted[Math.floor(sorted.length * 0.75)],
-          max: Math.max(...values),
-          avg: Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),
-        };
-      })
-      .sort((a, b) => b.avg - a.avg)
-      .slice(0, 10);
-    
-    console.log("State rainfall data:", sortedStates);
-    return sortedStates;
+    return Object.entries(soilType)
+      .map(([soil, values]) => ({
+        soilType: soil,
+        avgRainfall: Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),
+        minRainfall: Math.min(...values),
+        maxRainfall: Math.max(...values),
+      }))
+      .sort((a, b) => b.avgRainfall - a.avgRainfall);
   };
 
   const correlationData = () => {
@@ -179,8 +166,8 @@ const Analytics = () => {
     );
   }
 
-  const monthlyData = monthlyRainfall();
-  const stateData = stateRainfall();
+  const landCoverData = rainfallByLandCover();
+  const soilTypeData = rainfallBySoilType();
   const correlations = correlationData();
   const floodDist = floodDistribution();
   const scatter = scatterData();
@@ -236,17 +223,17 @@ const Analytics = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  Monthly Rainfall Trends
+                  Rainfall Trends by Land Cover Type
                 </CardTitle>
                 <CardDescription>
-                  Average rainfall across different months showing seasonal patterns
+                  Average rainfall patterns across different land cover categories
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={monthlyData}>
+                  <LineChart data={landCoverData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--foreground))" />
+                    <XAxis dataKey="landCover" stroke="hsl(var(--foreground))" />
                     <YAxis stroke="hsl(var(--foreground))" />
                     <Tooltip
                       contentStyle={{
@@ -273,17 +260,17 @@ const Analytics = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  State-wise Rainfall Distribution
+                  Rainfall Distribution by Soil Type
                 </CardTitle>
                 <CardDescription>
-                  Average rainfall distribution across top 10 states
+                  Average, minimum, and maximum rainfall across different soil types
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={stateData}>
+                  <BarChart data={soilTypeData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="state" stroke="hsl(var(--foreground))" angle={-45} textAnchor="end" height={100} />
+                    <XAxis dataKey="soilType" stroke="hsl(var(--foreground))" />
                     <YAxis stroke="hsl(var(--foreground))" />
                     <Tooltip
                       contentStyle={{
@@ -292,7 +279,8 @@ const Analytics = () => {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="avg" fill="hsl(var(--primary))" name="Avg Rainfall (mm)" />
+                    <Bar dataKey="avgRainfall" fill="hsl(var(--primary))" name="Avg Rainfall (mm)" />
+                    <Bar dataKey="maxRainfall" fill="hsl(var(--chart-2))" name="Max Rainfall (mm)" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
