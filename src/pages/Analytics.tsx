@@ -72,7 +72,7 @@ const Analytics = () => {
     });
     return Object.entries(monthly).map(([month, values]) => ({
       month,
-      avgRainfall: (values.total / values.count).toFixed(2),
+      avgRainfall: Number((values.total / values.count).toFixed(2)),
     }));
   };
 
@@ -91,7 +91,7 @@ const Analytics = () => {
       median: values.sort((a, b) => a - b)[Math.floor(values.length * 0.5)],
       q3: values.sort((a, b) => a - b)[Math.floor(values.length * 0.75)],
       max: Math.max(...values),
-      avg: (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2),
+      avg: Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),
     }));
   };
 
@@ -149,8 +149,8 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-ocean flex items-center justify-center">
-        <div className="text-white text-xl">Loading analytics data...</div>
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary flex items-center justify-center">
+        <div className="text-foreground text-xl">Loading analytics data...</div>
       </div>
     );
   }
@@ -162,22 +162,22 @@ const Analytics = () => {
   const scatter = scatterData();
 
   return (
-    <div className="min-h-screen bg-gradient-ocean">
-      <header className="border-b border-white/10 bg-background/10 backdrop-blur-md">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
+      <header className="border-b bg-card/50 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <NavLink
               to="/"
-              className="flex items-center gap-2 text-white hover:text-primary transition-colors"
+              className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-medium"
             >
               <ArrowLeft className="h-5 w-5" />
               <span>Back to Prediction</span>
             </NavLink>
             <div className="flex-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Flood Risk Analytics
               </h1>
-              <p className="text-white/80 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Exploratory Data Analysis of Indian Flood Dataset
               </p>
             </div>
