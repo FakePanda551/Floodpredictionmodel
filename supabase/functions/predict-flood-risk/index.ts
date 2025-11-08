@@ -5,6 +5,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// List of valid Indian cities/locations from the dataset
+const VALID_CITIES = [
+  'mumbai', 'delhi', 'bangalore', 'hyderabad', 'ahmedabad', 'chennai', 'kolkata',
+  'surat', 'pune', 'jaipur', 'lucknow', 'kanpur', 'nagpur', 'indore', 'thane',
+  'bhopal', 'visakhapatnam', 'pimpri-chinchwad', 'patna', 'vadodara', 'ghaziabad',
+  'ludhiana', 'agra', 'nashik', 'faridabad', 'meerut', 'rajkot', 'varanasi',
+  'srinagar', 'aurangabad', 'dhanbad', 'amritsar', 'navi mumbai', 'allahabad',
+  'ranchi', 'howrah', 'coimbatore', 'jabalpur', 'gwalior', 'vijayawada',
+  'jodhpur', 'madurai', 'raipur', 'kota', 'guwahati', 'chandigarh', 'solapur',
+  'hubli-dharwad', 'bareilly', 'moradabad', 'mysore', 'gurgaon', 'aligarh',
+  'jalandhar', 'tiruchirappalli', 'bhubaneswar', 'salem', 'warangal', 'mira-bhayandar',
+  'thiruvananthapuram', 'guntur', 'bhiwandi', 'saharanpur', 'gorakhpur', 'bikaner',
+  'amravati', 'noida', 'jamshedpur', 'bhilai', 'cuttack', 'firozabad', 'kochi',
+  'nellore', 'bhavnagar', 'dehradun', 'durgapur', 'asansol', 'rourkela', 'nanded',
+  'kolhapur', 'ajmer', 'akola', 'gulbarga', 'jamnagar', 'ujjain', 'loni', 'siliguri',
+  'jhansi', 'ulhasnagar', 'jammu', 'mangalore', 'erode', 'belgaum', 'ambattur',
+  'tirunelveli', 'malegaon', 'gaya', 'jalgaon', 'udaipur', 'maheshtala'
+];
+
+const isValidCity = (city: string): boolean => {
+  const normalizedCity = city.toLowerCase().trim();
+  return VALID_CITIES.some(validCity => 
+    normalizedCity === validCity || 
+    normalizedCity.includes(validCity) || 
+    validCity.includes(normalizedCity)
+  );
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -16,6 +44,14 @@ serve(async (req) => {
     if (!city) {
       return new Response(
         JSON.stringify({ error: 'City name is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate city name
+    if (!isValidCity(city)) {
+      return new Response(
+        JSON.stringify({ error: 'Please enter a valid Indian city name' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
