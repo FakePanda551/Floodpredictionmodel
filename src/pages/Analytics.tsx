@@ -37,6 +37,8 @@ const Analytics = () => {
         const rows = text.split("\n");
         const headers = rows[0].split(",").map(h => h.trim());
         
+        console.log("CSV Headers:", headers);
+        
         const parsedData = rows.slice(1)
           .filter(row => row.trim())
           .map(row => {
@@ -49,6 +51,8 @@ const Analytics = () => {
             return obj;
           });
 
+        console.log("Parsed data sample:", parsedData.slice(0, 3));
+        console.log("Total rows loaded:", parsedData.length);
         setData(parsedData);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -66,14 +70,21 @@ const Analytics = () => {
     data.forEach(d => {
       if (d.Month) {
         if (!monthly[d.Month]) monthly[d.Month] = { total: 0, count: 0 };
-        monthly[d.Month].total += d["Rainfall (mm)"] || 0;
-        monthly[d.Month].count += 1;
+        const rainfall = d["Rainfall (mm)"] || d["Rainfall(mm)"] || d.Rainfall || 0;
+        if (typeof rainfall === 'number' && !isNaN(rainfall)) {
+          monthly[d.Month].total += rainfall;
+          monthly[d.Month].count += 1;
+        }
       }
     });
-    return Object.entries(monthly).map(([month, values]) => ({
+    
+    const result = Object.entries(monthly).map(([month, values]) => ({
       month,
       avgRainfall: Number((values.total / values.count).toFixed(2)),
     }));
+    
+    console.log("Monthly rainfall data:", result);
+    return result;
   };
 
   const stateRainfall = () => {
@@ -81,18 +92,31 @@ const Analytics = () => {
     data.forEach(d => {
       if (d.State) {
         if (!states[d.State]) states[d.State] = [];
-        states[d.State].push(d["Rainfall (mm)"] || 0);
+        const rainfall = d["Rainfall (mm)"] || d["Rainfall(mm)"] || d.Rainfall || 0;
+        if (typeof rainfall === 'number' && !isNaN(rainfall)) {
+          states[d.State].push(rainfall);
+        }
       }
     });
-    return Object.entries(states).slice(0, 10).map(([state, values]) => ({
-      state,
-      min: Math.min(...values),
-      q1: values.sort((a, b) => a - b)[Math.floor(values.length * 0.25)],
-      median: values.sort((a, b) => a - b)[Math.floor(values.length * 0.5)],
-      q3: values.sort((a, b) => a - b)[Math.floor(values.length * 0.75)],
-      max: Math.max(...values),
-      avg: Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),
-    }));
+    
+    const sortedStates = Object.entries(states)
+      .map(([state, values]) => {
+        const sorted = [...values].sort((a, b) => a - b);
+        return {
+          state,
+          min: Math.min(...values),
+          q1: sorted[Math.floor(sorted.length * 0.25)],
+          median: sorted[Math.floor(sorted.length * 0.5)],
+          q3: sorted[Math.floor(sorted.length * 0.75)],
+          max: Math.max(...values),
+          avg: Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)),
+        };
+      })
+      .sort((a, b) => b.avg - a.avg)
+      .slice(0, 10);
+    
+    console.log("State rainfall data:", sortedStates);
+    return sortedStates;
   };
 
   const correlationData = () => {
